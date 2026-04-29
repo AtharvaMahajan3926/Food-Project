@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Volunteer Dashboard | FoodShare Mumbai</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">🍱</div>
+          FoodShare
+        </div>
+        <div class="user-profile">
+          <div class="user-avatar" id="user-avatar" style="background: var(--blue);">V</div>
+          <div class="user-info">
+            <h4 id="user-name">Loading...</h4>
+            <p id="user-role-label">VOLUNTEER</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-title">Main</div>
+          <a href="#" onclick="switchTab('view-overview', this)" class="nav-item active"><i>📊</i> Overview</a>
+          <a href="#" onclick="switchTab('view-available', this)" class="nav-item"><i>📦</i> Available Pickups</a>
+          <a href="#" onclick="switchTab('view-deliveries', this)" class="nav-item"><i>🚴</i> My Deliveries</a>
+        </div>
+        <div class="nav-group">
+          <div class="nav-title">Progress</div>
+          <a href="#" class="nav-item"><i>🎓</i> Certificates</a>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="doLogout()">← Log Out</button>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="topbar">
+        <h1 class="page-title">Volunteer Overview</h1>
+        <div class="live-indicator">
+          <div class="live-dot"></div>
+          <span id="live-count">Loading...</span>
+        </div>
+      </header>
+
+      <section id="view-overview" class="content-area dashboard-view">
+        <div class="stats-grid" id="stats-container">
+          <!-- Stats loaded dynamically -->
+        </div>
+
+        <div class="grid-2">
+          <div style="grid-column: span 2;">
+            <div class="section-header">
+              <h2>Available Pickups (Needs Delivery)</h2>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('view-available', document.querySelectorAll('.nav-item')[1])">View All</button>
+            </div>
+            <div class="list-container" id="donations-list">
+              <p style="color: var(--text3);">Loading deliveries...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-available" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>All Available Pickups</h2>
+        </div>
+        <div class="list-container" id="all-available-list">
+          <p style="color: var(--text3);">Loading requests...</p>
+        </div>
+      </section>
+
+      <section id="view-deliveries" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>My Active Deliveries</h2>
+        </div>
+        <div id="map" style="height: 500px; width: 100%; border-radius: var(--radius); margin-bottom: 24px;"></div>
+        <div class="list-container" id="my-deliveries-list">
+          <p style="color: var(--text3);">Loading active deliveries...</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/dashboard.js"></script>
+  <script>
+    async function loadDashboardData(user) {
+      try {
+        const stats = await apiFetch('/api/stats/overview');
+        document.getElementById('stats-container').innerHTML = `
+          ${renderStatCard('Total Deliveries', stats.deliveries || 0, '📦')}
+          ${renderStatCard('Hours Certified', stats.hours || 0, '🎓')}
+          ${renderStatCard('Certificates', stats.certificates || 0, '📜')}
+        `;
+
+        const donations = await apiFetch('/api/donations');
+        const availableDonations = donations.filter(d => d.status === 'accepted' && !d.volunteer_id);
+        const myDeliveries = donations.filter(d => d.volunteer_id === user.id && d.status === 'en_route');
+        
+        document.getElementById('donations-list').innerHTML = availableDonations.slice(0, 3).map(d => renderDonationItem(d, true, 'volunteer')).join('') || '<p>No available deliveries right now.</p>';
+        document.getElementById('all-available-list').innerHTML = availableDonations.map(d => renderDonationItem(d, true, 'volunteer')).join('') || '<p>No available deliveries right now.</p>';
+        document.getElementById('my-deliveries-list').innerHTML = myDeliveries.map(d => renderDonationItem(d, true, 'volunteer')).join('') || '<p>No active deliveries.</p>';
+        
+        // Initialize Map
+        initMap('map');
+        updateMapMarkers(myDeliveries.length > 0 ? myDeliveries : availableDonations);
+
+      } catch (e) {
+        showToast('❌', 'Failed to load dashboard data', 'var(--red)');
+      }
+    }
+  </script>
+</body>
+</html>

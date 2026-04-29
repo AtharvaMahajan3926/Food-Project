@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | FoodShare Mumbai</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="auth-wrapper" style="position: relative; overflow: hidden;">
+    <div class="food-motif motif-1" style="font-size: 7rem; opacity: 0.05;">🍔</div>
+    <div class="food-motif motif-2" style="font-size: 8rem; opacity: 0.05; left: 80%;">🍜</div>
+    <div class="glass-card auth-box" style="position: relative; z-index: 2;">
+      <div class="brand" style="justify-content: center; margin-bottom: 24px;">
+        <div class="brand-icon">🍱</div>
+        FoodShare
+      </div>
+      <h2 style="margin-bottom: 8px;">Welcome Back</h2>
+      <p style="color: var(--text2); margin-bottom: 32px;">Sign in or create a new account</p>
+
+      <div class="role-selector">
+        <div class="role-btn active" onclick="selectRole('restaurant', this)">🍴 Restaurant</div>
+        <div class="role-btn" onclick="selectRole('ngo', this)">🏥 NGO</div>
+        <div class="role-btn" onclick="selectRole('volunteer', this)">🚴 Volunteer</div>
+        <div class="role-btn" onclick="selectRole('student', this)">🎓 Student</div>
+        <div class="role-btn" style="grid-column: span 2;" onclick="selectRole('admin', this)">⚙️ Admin</div>
+      </div>
+
+      <!-- Login Form -->
+      <div id="login-fields">
+        <div class="input-group">
+          <input type="email" class="input" id="auth-email" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+          <input type="password" class="input" id="auth-pass" placeholder="Password" value="password123">
+        </div>
+        <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="doLogin()">Sign In</button>
+        <p style="margin-top: 20px; font-size: 0.9rem; color: var(--text2);">
+          New here? <a onclick="toggleRegisterMode()">Create an account</a>
+        </p>
+      </div>
+
+      <!-- Register Form -->
+      <div id="register-fields" class="hidden">
+        <div class="input-group">
+          <input type="text" class="input" id="reg-name" placeholder="Full Name / Organization">
+        </div>
+        <div class="input-group">
+          <input type="email" class="input" id="reg-email" placeholder="Email Address">
+        </div>
+        <div class="input-group">
+          <input type="password" class="input" id="reg-pass" placeholder="Password">
+        </div>
+
+        <div class="input-group hidden" id="reg-license">
+          <input type="text" class="input" placeholder="NGO License Number">
+        </div>
+
+        <div class="input-group hidden" id="reg-ngo-loc-group" style="display: flex; gap: 10px;">
+          <input type="text" class="input" id="reg-ngo-lat" placeholder="Latitude">
+          <input type="text" class="input" id="reg-ngo-lng" placeholder="Longitude">
+        </div>
+        <button id="reg-ngo-gps-btn" class="btn btn-secondary hidden" style="width: 100%; margin-bottom: 16px;" onclick="captureNGOGPS(this)">📍 Auto-Detect Location</button>
+
+        <div class="input-group hidden" id="reg-nss-group" style="text-align: left;">
+          <label style="color: var(--text2); font-size: 0.9rem; cursor: pointer;">
+            <input type="checkbox" id="reg-nss" style="margin-right: 8px;"> Yes, I am an NSS Candidate
+          </label>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; margin-top: 12px;" onclick="doRegister()">Create Account</button>
+        <p style="margin-top: 20px; font-size: 0.9rem; color: var(--text2);">
+          Already have an account? <a onclick="toggleRegisterMode()">Sign In</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/auth.js"></script>
+</body>
+</html>

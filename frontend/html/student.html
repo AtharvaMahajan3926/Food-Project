@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard | FoodShare Mumbai</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">🍱</div>
+          FoodShare
+        </div>
+        <div class="user-profile">
+          <div class="user-avatar" id="user-avatar" style="background: var(--amber);">S</div>
+          <div class="user-info">
+            <h4 id="user-name">Loading...</h4>
+            <p id="user-role-label">STUDENT</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-title">Main</div>
+          <a href="student.html" class="nav-item"><i>📊</i> Overview</a>
+          <a href="#" class="nav-item"><i>💳</i> Subscription</a>
+          <a href="#" class="nav-item"><i>🎁</i> Discounts</a>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="doLogout()">← Log Out</button>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="topbar">
+        <h1 class="page-title">Student Hub</h1>
+        <div class="live-indicator">
+          <div class="live-dot"></div>
+          <span id="live-count">Loading...</span>
+        </div>
+      </header>
+
+      <section class="content-area">
+        <div class="stats-grid" id="stats-container">
+          <!-- Stats loaded dynamically -->
+        </div>
+
+        <div class="glass-card" style="text-align: center; padding: 60px 20px;">
+          <div style="font-size: 3rem; margin-bottom: 16px;">🎁</div>
+          <h3>Restaurant Deals</h3>
+          <p style="color: var(--text2); margin-top: 8px;">Claim your 50% off discounts at participating partner restaurants.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/dashboard.js"></script>
+  <script>
+    async function loadDashboardData(user) {
+      try {
+        const stats = await apiFetch('/api/stats/overview');
+        document.getElementById('stats-container').innerHTML = `
+          ${renderStatCard('Money Saved (₹)', stats.saved || 0, '💸')}
+          ${renderStatCard('Your Points', user.points || 0, '⭐')}
+          ${renderStatCard('Active Discounts', stats.discounts || 0, '🎁')}
+        `;
+      } catch (e) {
+        showToast('❌', 'Failed to load dashboard data', 'var(--red)');
+      }
+    }
+  </script>
+</body>
+</html>

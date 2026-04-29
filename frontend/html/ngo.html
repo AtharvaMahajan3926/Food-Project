@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NGO Dashboard | FoodShare Mumbai</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body id="ngo-body">
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">🍱</div>
+          FoodShare
+        </div>
+        <div class="user-profile">
+          <div class="user-avatar" id="user-avatar" style="background: var(--accent);">N</div>
+          <div class="user-info">
+            <h4 id="user-name">Loading...</h4>
+            <p id="user-role-label">NGO</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-title">Main</div>
+          <a href="#" onclick="switchTab('view-overview', this)" class="nav-item active"><i>📊</i> Overview</a>
+          <a href="#" onclick="switchTab('view-incoming', this)" class="nav-item"><i>📥</i> Incoming Requests</a>
+          <a href="#" onclick="switchTab('view-active', this)" class="nav-item"><i>🚚</i> Active Deliveries</a>
+        </div>
+        <div class="nav-group">
+          <div class="nav-title">Reports</div>
+          <a href="#" class="nav-item"><i>📋</i> Donation History</a>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="doLogout()">← Log Out</button>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="topbar">
+        <h1 class="page-title">NGO Overview</h1>
+        <div class="live-indicator">
+          <div class="live-dot"></div>
+          <span id="live-count">Loading...</span>
+        </div>
+      </header>
+
+      <section id="view-overview" class="content-area dashboard-view">
+        <div class="stats-grid" id="stats-container">
+          <!-- Stats loaded dynamically -->
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <div class="section-header">
+              <h2>Incoming Donations</h2>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('view-incoming', document.querySelectorAll('.nav-item')[1])">View All</button>
+            </div>
+            <div class="list-container" id="donations-list">
+              <p style="color: var(--text3);">Loading donations...</p>
+            </div>
+          </div>
+          <div>
+             <div class="glass-card" style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">📍</div>
+                <h3>Active Delivery Map</h3>
+                <p style="color: var(--text2); margin-top: 8px;">Map is available in the Active Deliveries tab.</p>
+                <button class="btn btn-primary" style="margin-top: 16px;" onclick="switchTab('view-active', document.querySelectorAll('.nav-item')[2])">View Map</button>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-incoming" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>All Incoming Requests</h2>
+        </div>
+        <div class="list-container" id="all-donations-list">
+          <p style="color: var(--text3);">Loading requests...</p>
+        </div>
+      </section>
+
+      <section id="view-active" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>Active Deliveries & Map</h2>
+        </div>
+        <div id="map" style="height: 500px; width: 100%; border-radius: var(--radius); margin-bottom: 24px;"></div>
+        <div class="list-container" id="active-deliveries-list">
+          <p style="color: var(--text3);">Loading active deliveries...</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/dashboard.js"></script>
+  <script>
+    async function loadDashboardData(user) {
+      try {
+        const stats = await apiFetch('/api/stats/overview');
+        document.getElementById('stats-container').innerHTML = `
+          ${renderStatCard('Meals Received', stats.meals || 0, '🍱')}
+          ${renderStatCard('Pending Requests', stats.pending || 0, '⏳')}
+          ${renderStatCard('Active Deliveries', stats.active || 0, '🚚')}
+        `;
+
+        const donations = await apiFetch('/api/donations');
+        const pendingDonations = donations.filter(d => d.status === 'pending');
+        const activeDonations = donations.filter(d => d.status === 'accepted' || d.status === 'en_route');
+        
+        document.getElementById('donations-list').innerHTML = pendingDonations.slice(0, 3).map(d => renderDonationItem(d, true, 'ngo')).join('') || '<p>No new requests.</p>';
+        document.getElementById('all-donations-list').innerHTML = pendingDonations.map(d => renderDonationItem(d, true, 'ngo')).join('') || '<p>No pending requests.</p>';
+        document.getElementById('active-deliveries-list').innerHTML = activeDonations.map(d => renderDonationItem(d, true, 'ngo')).join('') || '<p>No active deliveries.</p>';
+        
+        // Initialize Map
+        initMap('map');
+        updateMapMarkers(activeDonations);
+
+      } catch (e) {
+        showToast('❌', 'Failed to load dashboard data', 'var(--red)');
+      }
+    }
+  </script>
+</body>
+</html>

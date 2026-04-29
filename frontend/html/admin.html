@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | FoodShare Mumbai</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">🍱</div>
+          FoodShare
+        </div>
+        <div class="user-profile">
+          <div class="user-avatar" id="user-avatar" style="background: var(--red);">A</div>
+          <div class="user-info">
+            <h4 id="user-name">Loading...</h4>
+            <p id="user-role-label">ADMIN</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-title">Management</div>
+          <a href="admin.html" class="nav-item"><i>📊</i> Dashboard</a>
+          <a href="#" class="nav-item"><i>✅</i> Verifications</a>
+        </div>
+        <div class="nav-group">
+          <div class="nav-title">System</div>
+          <a href="#" class="nav-item"><i>👥</i> All Users</a>
+          <a href="#" class="nav-item"><i>📋</i> Reports</a>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="doLogout()">← Log Out</button>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="topbar">
+        <h1 class="page-title">System Administrator</h1>
+        <div class="live-indicator">
+          <div class="live-dot"></div>
+          <span id="live-count">Loading...</span>
+        </div>
+      </header>
+
+      <section class="content-area">
+        <div class="stats-grid" id="stats-container">
+          <!-- Stats loaded dynamically -->
+        </div>
+
+        <div class="glass-card" style="text-align: center; padding: 60px 20px;">
+          <div style="font-size: 3rem; margin-bottom: 16px;">⚙️</div>
+          <h3>Admin Functions</h3>
+          <p style="color: var(--text2); margin-top: 8px;">Full admin controls available in dedicated sections.</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/dashboard.js"></script>
+  <script>
+    async function loadDashboardData(user) {
+      try {
+        const stats = await apiFetch('/api/auth/admin/analytics');
+        document.getElementById('stats-container').innerHTML = `
+          ${renderStatCard('Total Meals Served', stats.total_meals_served, '🍱')}
+          ${renderStatCard('Pending Verifications', stats.pending_verifications, '✅')}
+          ${renderStatCard('Total Users', stats.total_users, '👥')}
+        `;
+      } catch (e) {
+        showToast('❌', 'Failed to load dashboard data', 'var(--red)');
+      }
+    }
+  </script>
+</body>
+</html>

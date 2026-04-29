@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Restaurant Dashboard | FoodShare Mumbai</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="brand-icon">🍱</div>
+          FoodShare
+        </div>
+        <div class="user-profile">
+          <div class="user-avatar" id="user-avatar">R</div>
+          <div class="user-info">
+            <h4 id="user-name">Loading...</h4>
+            <p id="user-role-label">RESTAURANT</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sidebar-nav">
+        <div class="nav-group">
+          <div class="nav-title">Main</div>
+          <a href="#" onclick="switchTab('view-overview', this)" class="nav-item active"><i>📊</i> Overview</a>
+          <a href="#" onclick="switchTab('view-list', this)" class="nav-item"><i>➕</i> List Donation</a>
+          <a href="#" onclick="switchTab('view-donations', this)" class="nav-item"><i>📦</i> My Donations</a>
+        </div>
+        <div class="nav-group">
+          <div class="nav-title">Growth</div>
+          <a href="#" class="nav-item"><i>🏆</i> Rewards & Points</a>
+          <a href="#" class="nav-item"><i>📈</i> Leaderboard</a>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <button class="logout-btn" onclick="doLogout()">← Log Out</button>
+      </div>
+    </aside>
+
+    <main class="main-wrapper">
+      <header class="topbar">
+        <h1 class="page-title">Restaurant Overview</h1>
+        <div class="live-indicator">
+          <div class="live-dot"></div>
+          <span id="live-count">Loading...</span>
+        </div>
+      </header>
+
+      <section id="view-overview" class="content-area dashboard-view">
+        <div class="stats-grid" id="stats-container">
+          <!-- Stats loaded dynamically -->
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <div class="section-header">
+              <h2>Recent Donations</h2>
+              <button class="btn btn-secondary btn-sm" onclick="switchTab('view-donations', document.querySelectorAll('.nav-item')[2])">View All</button>
+            </div>
+            <div class="list-container" id="donations-list">
+              <p style="color: var(--text3);">Loading donations...</p>
+            </div>
+          </div>
+          <div>
+            <div class="section-header">
+              <h2>Leaderboard</h2>
+            </div>
+            <div class="list-container" id="leaderboard-list">
+              <p style="color: var(--text3);">Loading leaderboard...</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-list" class="content-area dashboard-view hidden">
+        <div class="glass-card" style="max-width: 600px; margin: 0 auto;">
+          <h2 style="margin-bottom: 24px;">List Surplus Food</h2>
+          <form onsubmit="submitDonation(event)">
+            <div class="input-group">
+              <input type="text" name="food_name" class="input" placeholder="Food Item (e.g. Mixed Salads)" required>
+            </div>
+            <div class="input-group" style="display: flex; gap: 16px;">
+              <input type="text" name="quantity" class="input" placeholder="Quantity (e.g. 5kg, 20 portions)" required>
+              <select name="category" class="input" required>
+                <option value="cooked">Cooked Food</option>
+                <option value="raw">Raw Ingredients</option>
+                <option value="packaged">Packaged</option>
+                <option value="baked">Baked Goods</option>
+              </select>
+            </div>
+            <div class="input-group" style="display: flex; gap: 16px;">
+              <input type="time" name="expiry_time" class="input" required>
+              <input type="date" name="date" class="input" required>
+            </div>
+            <div class="input-group">
+              <input type="text" name="location" class="input" placeholder="Pickup Address" required>
+            </div>
+            <div class="input-group">
+              <input type="text" name="special_instructions" class="input" placeholder="Special Instructions (Optional)">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">List Donation</button>
+          </form>
+        </div>
+      </section>
+
+      <section id="view-donations" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>All My Donations</h2>
+        </div>
+        <div class="list-container" id="all-donations-list">
+          <p style="color: var(--text3);">Loading donations...</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/common.js"></script>
+  <script src="../js/dashboard.js"></script>
+  <script>
+    async function loadDashboardData(user) {
+      try {
+        const stats = await apiFetch('/api/stats/overview');
+        document.getElementById('stats-container').innerHTML = `
+          ${renderStatCard('Meals Saved', stats.meals_saved || 0, '🍱')}
+          ${renderStatCard('Total Donations', stats.total_donations || 0, '📦')}
+          ${renderStatCard('Your Rank', stats.rank || 'New', '🏆')}
+        `;
+
+        const donations = await apiFetch('/api/donations');
+        
+        // Populate recent
+        const dList = document.getElementById('donations-list');
+        dList.innerHTML = donations.slice(0, 3).map(d => renderDonationItem(d, true, 'restaurant')).join('') || '<p>No donations yet.</p>';
+        
+        // Populate all
+        const allList = document.getElementById('all-donations-list');
+        allList.innerHTML = donations.map(d => renderDonationItem(d, true, 'restaurant')).join('') || '<p>No donations yet.</p>';
+
+        const leaderboard = await apiFetch('/api/stats/leaderboard');
+        document.getElementById('leaderboard-list').innerHTML = leaderboard.slice(0, 5).map(l => `
+          <div class="list-item" style="padding: 12px 20px;">
+            <div style="font-weight: 800; font-size: 1.3rem; width: 36px;">${l.rank}</div>
+            <div style="flex:1;">
+              <h4 style="margin:0;">${l.name}</h4>
+              <p style="margin:0; font-size: 0.8rem; color: var(--text2);">${l.meals} meals donated</p>
+            </div>
+            <div style="font-weight: 700; color: var(--amber);">${l.pts} pts</div>
+          </div>
+        `).join('') || '<p style="color: var(--text3);">No data yet.</p>';
+      } catch (e) {
+        showToast('❌', 'Failed to load dashboard data', 'var(--red)');
+      }
+    }
+  </script>
+</body>
+</html>
