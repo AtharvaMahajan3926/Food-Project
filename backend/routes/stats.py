@@ -57,8 +57,16 @@ async def get_overview_stats(current_user: UserInDB = Depends(get_current_user))
             "saved": 640
         }
 
+import time
+
+_leaderboard_cache = {"data": None, "timestamp": 0}
+
 @router.get("/leaderboard", response_model=List[dict])
 async def get_leaderboard():
+    global _leaderboard_cache
+    if _leaderboard_cache["data"] and time.time() - _leaderboard_cache["timestamp"] < 15:
+        return _leaderboard_cache["data"]
+
     db = get_database()
     # Rank all restaurants by points
     cursor = db.users.find({"role": "restaurant"}).sort("points", -1).limit(10)
@@ -78,10 +86,19 @@ async def get_leaderboard():
             "pts": u.get("points", 0),
             "user_id": str(u["_id"])
         })
+        
+    _leaderboard_cache["data"] = leaderboard
+    _leaderboard_cache["timestamp"] = time.time()
     return leaderboard
+
+_impact_cache = {"data": None, "timestamp": 0}
 
 @router.get("/impact")
 async def get_impact():
+    global _impact_cache
+    if _impact_cache["data"] and time.time() - _impact_cache["timestamp"] < 5:
+        return _impact_cache["data"]
+
     db = get_database()
     pipeline = [
         {"$match": {"status": "delivered"}},
@@ -90,9 +107,13 @@ async def get_impact():
     res = await db.donations.aggregate(pipeline).to_list(length=1)
     meals = res[0]["total"] if res else 0
     
-    return {
+    data = {
         "meals_donated": meals,
         "kg_saved": meals * 0.4, # ~400g per meal
         "people_helped": meals, # 1 meal = 1 person roughly
         "co2_prevented": meals * 0.8
     }
+    
+    _impact_cache["data"] = data
+    _impact_cache["timestamp"] = time.time()
+    return data

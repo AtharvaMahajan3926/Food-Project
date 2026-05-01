@@ -59,18 +59,64 @@ function checkAuthAndRoute() {
   }
 }
 
-let liveCount = 247;
-function startLiveCounter() {
-  setInterval(() => {
-    liveCount += Math.floor(Math.random() * 2);
-    const liveCountEl = document.getElementById('live-count');
-    if (liveCountEl) {
-      liveCountEl.textContent = `${liveCount} meals today`;
+async function startLiveCounter() {
+  const updateCount = async () => {
+    try {
+      const impact = await apiFetch('/api/stats/impact');
+      const liveCountEl = document.getElementById('live-count');
+      if (liveCountEl) {
+        liveCountEl.textContent = `${impact.meals_donated} meals served`;
+      }
+    } catch (e) {
+      console.error('Failed to fetch live stats', e);
     }
-  }, 5000);
+  };
+
+  // Initial fetch
+  await updateCount();
+
+  // Poll every 10 seconds
+  setInterval(updateCount, 10000);
+}
+
+// ══════════ THEME TOGGLE LOGIC ══════════
+function initTheme() {
+  const savedTheme = localStorage.getItem('foodshare_theme') || 'dark'; // Default to dark now
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+}
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute('data-theme');
+  const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', newTheme);
+  localStorage.setItem('foodshare_theme', newTheme);
+  updateThemeIcon(newTheme);
+}
+
+function updateThemeIcon(theme) {
+  const toggleBtn = document.getElementById('themeToggleBtn');
+  if (toggleBtn) {
+    toggleBtn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   checkAuthAndRoute();
   startLiveCounter();
+
+  // Attach theme toggle listener if button exists
+  const toggleBtn = document.getElementById('themeToggleBtn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', toggleTheme);
+  }
+
+  // Make brand logo clickable to return to landing page
+  const brands = document.querySelectorAll('.brand');
+  brands.forEach(b => {
+    b.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+  });
 });

@@ -34,7 +34,7 @@
         </div>
         <div class="nav-group">
           <div class="nav-title">Reports</div>
-          <a href="#" class="nav-item"><i>📋</i> Donation History</a>
+          <a href="#" onclick="switchTab('view-history', this)" class="nav-item"><i>📋</i> Donation History</a>
         </div>
       </div>
 
@@ -46,9 +46,12 @@
     <main class="main-wrapper">
       <header class="topbar">
         <h1 class="page-title">NGO Overview</h1>
-        <div class="live-indicator">
-          <div class="live-dot"></div>
-          <span id="live-count">Loading...</span>
+        <div style="display: flex; align-items: center;">
+          <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle Theme">☀️</button>
+          <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span id="live-count">Loading...</span>
+          </div>
         </div>
       </header>
 
@@ -96,6 +99,15 @@
           <p style="color: var(--text3);">Loading active deliveries...</p>
         </div>
       </section>
+
+      <section id="view-history" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>Donation History</h2>
+        </div>
+        <div class="list-container" id="donation-history-list">
+          <p style="color: var(--text3);">Loading history...</p>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -116,10 +128,12 @@
         const donations = await apiFetch('/api/donations');
         const pendingDonations = donations.filter(d => d.status === 'pending');
         const activeDonations = donations.filter(d => d.status === 'accepted' || d.status === 'en_route');
+        const historyDonations = donations.filter(d => d.status === 'delivered');
         
         document.getElementById('donations-list').innerHTML = pendingDonations.slice(0, 3).map(d => renderDonationItem(d, true, 'ngo')).join('') || '<p>No new requests.</p>';
         document.getElementById('all-donations-list').innerHTML = pendingDonations.map(d => renderDonationItem(d, true, 'ngo')).join('') || '<p>No pending requests.</p>';
         document.getElementById('active-deliveries-list').innerHTML = activeDonations.map(d => renderDonationItem(d, true, 'ngo')).join('') || '<p>No active deliveries.</p>';
+        document.getElementById('donation-history-list').innerHTML = historyDonations.map(d => renderDonationItem(d, false, 'ngo')).join('') || '<p>No donation history yet.</p>';
         
         // Initialize Map
         initMap('map');

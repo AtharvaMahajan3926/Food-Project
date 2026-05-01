@@ -47,6 +47,7 @@ function renderStatCard(title, value, icon) {
 function renderDonationItem(donation, showActions = false, role = '') {
   const isPending = donation.status === 'pending';
   const isAccepted = donation.status === 'accepted';
+  const isEnRoute = donation.status === 'en_route';
   const badgeClass = isPending ? 'pending' : (isAccepted ? 'accepted' : 'delivered');
   
   let actionHtml = '';
@@ -55,7 +56,9 @@ function renderDonationItem(donation, showActions = false, role = '') {
       actionHtml = `<button class="btn btn-primary btn-sm" onclick="handleAction('accept', '${donation._id}')">Accept</button>`;
     } else if (role === 'volunteer' && isAccepted && !donation.volunteer_id) {
       actionHtml = `<button class="btn btn-secondary btn-sm" onclick="handleAction('claim', '${donation._id}', ${donation.lat}, ${donation.lng})">Claim Delivery</button>`;
-    } else if (role === 'restaurant' && (isPending || isAccepted)) {
+    } else if (role === 'volunteer' && isEnRoute) {
+      actionHtml = `<button class="btn btn-primary btn-sm" onclick="handleAction('deliver', '${donation._id}')">Mark Completed</button>`;
+    } else if (role === 'restaurant' && (isPending || isAccepted || isEnRoute)) {
       actionHtml = `<button class="btn btn-secondary btn-sm" onclick="handleAction('complete', '${donation._id}')">Mark Complete</button>`;
     }
   }
@@ -111,8 +114,8 @@ function switchTab(viewId, el) {
   const target = document.getElementById(viewId);
   if (target) {
     target.classList.remove('hidden');
-    // Trigger map resize if map is in this view
-    if (viewId === 'view-map' && window.mapInstance) {
+    // Trigger map resize if map exists
+    if (window.mapInstance) {
       setTimeout(() => window.mapInstance.invalidateSize(), 100);
     }
   }
@@ -127,9 +130,31 @@ function initMap(mapId) {
   if (typeof L === 'undefined') return null;
 
   const map = L.map(mapId).setView([19.0760, 72.8777], 11);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  
+  // Define Base Layers
+  const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; CARTO'
-  }).addTo(map);
+  });
+  
+  const satelliteMap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: '&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
+  });
+  
+  const streetMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap'
+  });
+
+  // Set default
+  darkMap.addTo(map);
+  
+  // Add layer control widget to the map
+  const baseMaps = {
+    "Dark Mode": darkMap,
+    "Satellite View": satelliteMap,
+    "Street View": streetMap
+  };
+  
+  L.control.layers(baseMaps).addTo(map);
   
   window.mapInstance = map;
   return map;

@@ -39,3 +39,22 @@ app.include_router(stats.router, prefix="/api/stats", tags=["Stats"])
 @app.get("/api/")
 def read_root():
     return {"message": "Welcome to FoodShare Mumbai API"}
+
+from backend.database import get_database
+import pymongo
+
+@app.on_event("startup")
+async def startup_db_client():
+    db = get_database()
+    
+    # Optimize Queries: Create indexes for fast lookups on donations
+    await db.donations.create_index([("status", pymongo.ASCENDING)])
+    await db.donations.create_index([("created_by_id", pymongo.ASCENDING)])
+    await db.donations.create_index([("ngo_id", pymongo.ASCENDING)])
+    await db.donations.create_index([("volunteer_id", pymongo.ASCENDING)])
+    await db.donations.create_index([("created_at", pymongo.DESCENDING)])
+    
+    # Optimize Queries: Create indexes for users collection
+    await db.users.create_index([("email", pymongo.ASCENDING)], unique=True)
+    await db.users.create_index([("role", pymongo.ASCENDING)])
+    await db.users.create_index([("points", pymongo.DESCENDING)])

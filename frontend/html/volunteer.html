@@ -34,6 +34,7 @@
         </div>
         <div class="nav-group">
           <div class="nav-title">Progress</div>
+          <a href="#" onclick="switchTab('view-history', this)" class="nav-item"><i>📜</i> Delivery History</a>
           <a href="#" class="nav-item"><i>🎓</i> Certificates</a>
         </div>
       </div>
@@ -46,9 +47,12 @@
     <main class="main-wrapper">
       <header class="topbar">
         <h1 class="page-title">Volunteer Overview</h1>
-        <div class="live-indicator">
-          <div class="live-dot"></div>
-          <span id="live-count">Loading...</span>
+        <div style="display: flex; align-items: center;">
+          <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle Theme">☀️</button>
+          <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span id="live-count">Loading...</span>
+          </div>
         </div>
       </header>
 
@@ -88,6 +92,15 @@
           <p style="color: var(--text3);">Loading active deliveries...</p>
         </div>
       </section>
+
+      <section id="view-history" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>My Delivery History</h2>
+        </div>
+        <div class="list-container" id="delivery-history-list">
+          <p style="color: var(--text3);">Loading history...</p>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -106,12 +119,15 @@
         `;
 
         const donations = await apiFetch('/api/donations');
+        const userId = user.id || user._id;
         const availableDonations = donations.filter(d => d.status === 'accepted' && !d.volunteer_id);
-        const myDeliveries = donations.filter(d => d.volunteer_id === user.id && d.status === 'en_route');
+        const myDeliveries = donations.filter(d => d.volunteer_id === userId && d.status === 'en_route');
+        const myHistory = donations.filter(d => d.volunteer_id === userId && d.status === 'delivered');
         
         document.getElementById('donations-list').innerHTML = availableDonations.slice(0, 3).map(d => renderDonationItem(d, true, 'volunteer')).join('') || '<p>No available deliveries right now.</p>';
         document.getElementById('all-available-list').innerHTML = availableDonations.map(d => renderDonationItem(d, true, 'volunteer')).join('') || '<p>No available deliveries right now.</p>';
         document.getElementById('my-deliveries-list').innerHTML = myDeliveries.map(d => renderDonationItem(d, true, 'volunteer')).join('') || '<p>No active deliveries.</p>';
+        document.getElementById('delivery-history-list').innerHTML = myHistory.map(d => renderDonationItem(d, false, 'volunteer')).join('') || '<p>No past deliveries yet.</p>';
         
         // Initialize Map
         initMap('map');

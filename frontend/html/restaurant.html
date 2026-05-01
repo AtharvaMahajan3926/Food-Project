@@ -33,8 +33,8 @@
         </div>
         <div class="nav-group">
           <div class="nav-title">Growth</div>
-          <a href="#" class="nav-item"><i>🏆</i> Rewards & Points</a>
-          <a href="#" class="nav-item"><i>📈</i> Leaderboard</a>
+          <a href="#" onclick="switchTab('view-rewards', this)" class="nav-item"><i>🏆</i> Rewards & Points</a>
+          <a href="#" onclick="switchTab('view-leaderboard', this)" class="nav-item"><i>📈</i> Leaderboard</a>
         </div>
       </div>
 
@@ -46,9 +46,12 @@
     <main class="main-wrapper">
       <header class="topbar">
         <h1 class="page-title">Restaurant Overview</h1>
-        <div class="live-indicator">
-          <div class="live-dot"></div>
-          <span id="live-count">Loading...</span>
+        <div style="display: flex; align-items: center;">
+          <button id="themeToggleBtn" class="theme-toggle" aria-label="Toggle Theme">☀️</button>
+          <div class="live-indicator">
+            <div class="live-dot"></div>
+            <span id="live-count">Loading...</span>
+          </div>
         </div>
       </header>
 
@@ -117,6 +120,48 @@
           <p style="color: var(--text3);">Loading donations...</p>
         </div>
       </section>
+
+      <section id="view-rewards" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>Rewards & Points</h2>
+        </div>
+        <div class="stats-grid" id="rewards-stats-container">
+          <!-- Populated dynamically -->
+        </div>
+        <div class="glass-card" style="margin-top: 24px;">
+          <h3>Available Rewards</h3>
+          <p style="color: var(--text2); margin-bottom: 16px;">Redeem your points for these exclusive perks.</p>
+          <div class="list-container">
+            <div class="list-item" style="padding: 16px;">
+              <div style="font-size: 2rem; margin-right: 16px;">🌟</div>
+              <div style="flex: 1;">
+                <h4>Premium Placement</h4>
+                <p style="color: var(--text2); font-size: 0.9rem; margin: 0;">Get your restaurant featured on the landing page for 1 week.</p>
+              </div>
+              <button class="btn btn-primary btn-sm">Redeem (500 pts)</button>
+            </div>
+            <div class="list-item" style="padding: 16px;">
+              <div style="font-size: 2rem; margin-right: 16px;">📜</div>
+              <div style="flex: 1;">
+                <h4>Official CSR Certificate</h4>
+                <p style="color: var(--text2); font-size: 0.9rem; margin: 0;">A framed physical certificate for your restaurant wall.</p>
+              </div>
+              <button class="btn btn-secondary btn-sm">Redeem (1000 pts)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-leaderboard" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>Full Leaderboard</h2>
+        </div>
+        <div class="glass-card">
+          <div class="list-container" id="full-leaderboard-list">
+            <p style="color: var(--text3);">Loading leaderboard...</p>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -144,7 +189,7 @@
         allList.innerHTML = donations.map(d => renderDonationItem(d, true, 'restaurant')).join('') || '<p>No donations yet.</p>';
 
         const leaderboard = await apiFetch('/api/stats/leaderboard');
-        document.getElementById('leaderboard-list').innerHTML = leaderboard.slice(0, 5).map(l => `
+        const renderLBoard = (data) => data.map(l => `
           <div class="list-item" style="padding: 12px 20px;">
             <div style="font-weight: 800; font-size: 1.3rem; width: 36px;">${l.rank}</div>
             <div style="flex:1;">
@@ -154,6 +199,22 @@
             <div style="font-weight: 700; color: var(--amber);">${l.pts} pts</div>
           </div>
         `).join('') || '<p style="color: var(--text3);">No data yet.</p>';
+
+        document.getElementById('leaderboard-list').innerHTML = renderLBoard(leaderboard.slice(0, 5));
+        
+        const fullLeaderboardEl = document.getElementById('full-leaderboard-list');
+        if (fullLeaderboardEl) {
+          fullLeaderboardEl.innerHTML = renderLBoard(leaderboard);
+        }
+
+        const rewardsStatsEl = document.getElementById('rewards-stats-container');
+        if (rewardsStatsEl) {
+          rewardsStatsEl.innerHTML = `
+            ${renderStatCard('Total Points', user.points || 0, '⭐')}
+            ${renderStatCard('Your Rank', stats.rank || 'New', '🏆')}
+            ${renderStatCard('Meals Saved', stats.meals_saved || 0, '🍱')}
+          `;
+        }
       } catch (e) {
         showToast('❌', 'Failed to load dashboard data', 'var(--red)');
       }

@@ -10,10 +10,7 @@ from backend.routes.auth import get_current_user, UserInDB
 
 router = APIRouter()
 
-class AcceptBody(BaseModel):
-    drop_off_address: str
-    drop_off_lat: Optional[float] = None
-    drop_off_lng: Optional[float] = None
+# Removed AcceptBody since we'll use user's registered location
 
 @router.post("/", response_model=DonationInDB)
 async def create_donation(donation: DonationCreate, current_user: UserInDB = Depends(get_current_user)):
@@ -62,7 +59,7 @@ async def get_donations(current_user: UserInDB = Depends(get_current_user)):
     return [DonationInDB(**doc) for doc in donations]
 
 @router.put("/{donation_id}/accept")
-async def accept_donation(donation_id: str, body: AcceptBody, current_user: UserInDB = Depends(get_current_user)):
+async def accept_donation(donation_id: str, current_user: UserInDB = Depends(get_current_user)):
     if current_user.role != "ngo":
         raise HTTPException(status_code=403, detail="Only NGOs can accept donations")
 
@@ -73,15 +70,15 @@ async def accept_donation(donation_id: str, body: AcceptBody, current_user: User
             "status": "accepted",
             "ngo_id": str(current_user.id),
             "ngo_name": current_user.name,
-            "drop_off_address": body.drop_off_address,
-            "drop_off_lat": body.drop_off_lat,
-            "drop_off_lng": body.drop_off_lng,
+            "drop_off_address": current_user.ngo_location or "NGO Headquarters",
+            "drop_off_lat": current_user.ngo_lat,
+            "drop_off_lng": current_user.ngo_lng,
         }}
     )
     if result.modified_count == 0:
         raise HTTPException(status_code=400, detail="Donation not found or already accepted")
         
-    return {"message": "Donation accepted", "drop_off_address": body.drop_off_address}
+    return {"message": "Donation accepted"}
 
 @router.put("/{donation_id}/claim")
 async def claim_donation(donation_id: str, current_user: UserInDB = Depends(get_current_user)):
@@ -115,3 +112,18 @@ async def deliver_donation(donation_id: str, current_user: UserInDB = Depends(ge
     await db.users.update_one({"_id": ObjectId(current_user.id)}, {"$inc": {"points": 2}})
         
     return {"message": "Donation delivered"}
+
+@router.put("/{donation_id}/complete")
+async def complete_donation(donation_id: str, current_user: UserInDB = Depends(get_current_user)):
+    if current_user.role != "restaurant":
+        raise HTTPException(status_code=403, detail="Only restaurants can mark donations as complete")
+
+    db = get_database()
+    result = await db.donations.update_one(
+        {"_id": ObjectId(donation_id), "created_by_id": str(current_user.id), "status": {"$in": ["pending", "accepted", "en_route"]}},
+        {"$set": {"status": "delivered"}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=400, detail="Donation not found or already completed")
+        
+    return {"message": "Donation marked as complete"}
