@@ -1,150 +1,72 @@
 # 🍽️ FoodLink: Smart Food Donation & Reward Ecosystem
 
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge\&logo=react\&logoColor=61DAFB)](https://react.dev/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge\&logo=fastapi\&logoColor=white)](https://fastapi.tiangolo.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge\&logo=mongodb\&logoColor=white)](https://www.mongodb.com/)
-[![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-ff69b4?style=for-the-badge)]()
+[![GitHub stars](https://img.shields.io/badge/Status-Concept%20%26%20Early%20Development-blue?style=for-the-badge)](https://github.com/Atharva/FoodLink)
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+
+**FoodLink** is a technology-driven social impact platform based in **Mumbai, India**, designed to bridge the gap between food waste and food insecurity. By connecting surplus food donors—including restaurants, hotels, and households—with verified NGOs, we aim to build a sustainable redistribution network that promotes **UN SDG 2: Zero Hunger**.
 
 ---
 
-## ✨ What is FoodLink?
+## ✨ Features & Ecosystem
 
-**FoodLink** is a next-generation social impact platform designed to **reduce food waste and fight hunger** by connecting surplus food donors with NGOs in real time.
-
-It combines **technology, logistics, and rewards** into a scalable ecosystem.
-
----
-
-## ✨ System Highlights
-
-### 🍱 For Donors (The Contributors)
-
-* **Instant Food Listing:** Upload surplus food with details
-* **Reward Engine:** Earn points, badges, leaderboard rank
-* **Impact Tracking:** View contribution impact
-
----
+### 🍱 For Donors (Restaurants & Individuals)
+* **Instant Listing:** Upload food type, quantity, and pickup times seamlessly.
+* **Gamified Rewards:** Earn points, badges, and reach the top of the leaderboard for your contributions.
+* **Brand Visibility:** Partner restaurants gain visibility through social responsibility.
 
 ### 🤝 For NGOs (The Receivers)
+* **Smart Matching:** Automated matching with nearby donors using the **Google Maps API**.
+* **Efficient Logistics:** Coordinated pickup and drop-off via a hybrid volunteer and paid partner model.
+* **Real-time Acceptance:** Review and accept donation requests instantly through the dashboard.
 
-* **Smart Matching:** Get nearby food donations automatically
-* **Quick Accept:** Accept requests in real-time
-* **Efficient Distribution:** Smooth delivery coordination
-
----
-
-### 👑 For Admins (The Control Hub)
-
-* **Analytics Dashboard:** Monitor system activity
-* **Leaderboard Insights:** Track top contributors
-* **System Monitoring:** Backend performance tracking
-
----
-
-## 🎨 Premium UX Features
-
-* Clean and responsive UI
-* Real-time updates
-* Role-based dashboards
-* Smooth navigation experience
+### 👑 For Subscribers
+* **Exclusive Discounts:** Monthly tiers (₹49–₹199) unlock off-peak discounts at partner restaurants.
+* **Impact Funding:** Subscription fees directly support delivery partner payments and operational costs.
 
 ---
 
 ## 🛠️ Technical Architecture
 
 ### Core Stack
-
-| Layer    | Technologies          |
-| -------- | --------------------- |
-| Frontend | React / HTML, CSS, JS |
-| Backend  | FastAPI (Python)      |
-| Server   | Uvicorn               |
-| Database | MongoDB / Firestore   |
-| Security | JWT Authentication    |
+| Layer | Technologies | Role |
+| :--- | :--- | :--- |
+| **Frontend** | **React / HTML, CSS, JS** | Responsive UI with smooth motion animations. |
+| **Backend** | **FastAPI / Node.js** | High-performance handling of donation requests. |
+| **Database** | **MongoDB / Firestore** | Scalable storage for user profiles and food logs. |
+| **Location** | **Google Maps API** | NGO matching and distance calculation. |
+| **Auth** | **JWT / Firebase Auth** | Secure, role-based access control. |
 
 ---
 
 ## 📂 Project Structure
-
 ```text
 📦 FoodLink
- ┣ 📂 backend
- ┃ ┣ 📂 api
- ┃ ┣ 📂 models
- ┃ ┗ 📜 main.py
- ┣ 📂 frontend
- ┃ ┣ 📂 components
- ┃ ┣ 📂 pages
- ┃ ┗ 📜 app.js
- ┣ 📜 requirements.txt
- ┗ 📜 README.md
-```
-
----
-
-## 🏗️ Local Development
-
-### Prerequisites
-
-* Python 3.10+
-* Node.js
-* MongoDB
-
----
-
-### 🔹 Setup Backend
-
-```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
----
-
-### 🔹 Setup Frontend
-
-```bash
-cd frontend
-npm install
-npm start
+ ┣ 📂 backend       # FastAPI/Node.js logic and API routes
+ ┣ 📂 frontend      # React components and UI motion logic
+ ┣ 📜 .env          # API keys for Google Maps & Database
+ ┣ 📜 requirements  # Backend dependencies
+ ┗ 📜 README.md     # Project documentation
 ```
 
 ---
 
 ## 🚀 Future Roadmap
+- [ ] **AI Integration:** Demand prediction based on area and time of day.
+- [ ] **Mobile App:** Native Android and iOS applications.
+- [ ] **Third-Party Logistics:** Integration with platforms like Zomato/Swiggy for last-mile delivery.
+- [ ] **National Expansion:** Scaling from Mumbai to other major metro cities.
 
-* [ ] AI-based food demand prediction
-* [ ] Real-time delivery tracking
-* [ ] Mobile app
-* [ ] Integration with delivery platforms
-* [ ] Multi-city expansion
+---
+
+## 🤝 Team & Support
+* **Developer:** Atharva Mahajan
+* **Target:** Mumbai-based social impact initiatives
+
+> **Impact Dashboard:** FoodLink includes a live counter of meals donated, food saved, and people helped to ensure total transparency.
 
 ---
 
 ## 🌍 Vision
-
-FoodLink aims to build a **zero food waste ecosystem**, contributing to **UN SDG 2 (Zero Hunger)**.
-
----
-
-## 🤝 Team
-
-* **Atharva Mahajan** – Developer
-
----
-
-## ⭐ Support
-
-If you like this project:
-
-* ⭐ Star the repository
-* 🍴 Fork and contribute
-
----
-
-## ✨ Tagline
-
-> “Connecting surplus food with those who need it most.”
+> “Connecting surplus food with those who need it most, one meal at a time.”
