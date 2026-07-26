@@ -21,10 +21,12 @@ app.get('/env.js', (req, res) => {
 });
 
 // Serve static assets from frontend directory with HTTP caching
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use(express.static(__dirname, {
   maxAge: '1d',
-  setHeaders: (res, path) => {
-    if (path.endsWith('.html')) {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
       res.setHeader('Cache-Control', 'no-cache');
     }
   }
