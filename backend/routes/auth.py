@@ -98,56 +98,59 @@ async def login_for_access_token(
     username: Optional[str] = Form(None),
     password: Optional[str] = Form(None)
 ):
-    if not username or not password:
-        try:
-            body = await request.json()
-            username = username or body.get("username")
-            password = password or body.get("password")
-        except Exception:
-            pass
-
-    if not username or not password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username and password are required",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    db = get_database()
-    normalized_email = username.strip().lower()
     try:
+        if not username or not password:
+            try:
+                body = await request.json()
+                username = username or body.get("username")
+                password = password or body.get("password")
+            except Exception:
+                pass
+
+        if not username or not password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username and password are required",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        db = get_database()
+        normalized_email = username.strip().lower()
         user = await db.users.find_one({"email": normalized_email})
-    except Exception as err:
-        print(f"Database login error: {err}")
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Email not registered. Please create an account.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        if not verify_password(password, user["hashed_password"]):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        if not user.get("is_verified", False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Your account is pending admin verification. Please wait for approval before logging in.",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        access_token = create_access_token(
+            data={"sub": user["email"], "role": user.get("role")}, expires_delta=access_token_expires
+        )
+        return {"access_token": access_token, "token_type": "bearer"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Database connection failed: {str(err)}",
+            detail=f"Login Error: {str(e)}"
         )
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Email not registered. Please create an account.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    if not verify_password(password, user["hashed_password"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    if not user.get("is_verified", False):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Your account is pending admin verification. Please wait for approval before logging in.",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user["email"], "role": user.get("role")}, expires_delta=access_token_expires
-    )
-    return {"access_token": access_token, "token_type": "bearer"}
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
