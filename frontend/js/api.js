@@ -1,6 +1,6 @@
 const API_URL = (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_URL) 
   ? window.APP_CONFIG.API_URL 
-  : 'http://localhost:8000';
+  : 'https://foodshare-xpnq.onrender.com';
 
 function getToken() {
   return localStorage.getItem('foodshare_token');

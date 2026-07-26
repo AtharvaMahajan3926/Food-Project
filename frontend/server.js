@@ -8,7 +8,7 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_URL = process.env.API_URL || 'http://localhost:8000';
+const API_URL = process.env.API_URL || 'https://foodshare-xpnq.onrender.com';
 
 // Enable GZip compression for all responses
 app.use(compression());
@@ -17,7 +17,7 @@ app.use(compression());
 app.get('/env.js', (req, res) => {
   res.setHeader('Content-Type', 'application/javascript');
   res.setHeader('Cache-Control', 'no-cache');
-  res.send(`window.APP_CONFIG = Object.freeze({ API_URL: "${process.env.API_URL || 'http://localhost:8000'}" });`);
+  res.send(`window.APP_CONFIG = Object.freeze({ API_URL: "${process.env.API_URL || 'https://foodshare-xpnq.onrender.com'}" });`);
 });
 
 // Serve static assets from frontend directory with HTTP caching
