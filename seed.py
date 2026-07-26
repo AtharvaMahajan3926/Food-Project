@@ -24,7 +24,7 @@ async def seed_database():
     print("Cleared existing collections.")
 
     # 2. Create Users
-    hashed_pwd = pwd_context.hash("password123")
+    hashed_pwd = pwd_context.hash("password123"[:72])
     
     users = [
         {
