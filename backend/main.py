@@ -9,8 +9,32 @@ from fastapi.staticfiles import StaticFiles
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.routes import auth, donations, stats
+from backend.database import get_database
+import pymongo
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="FoodShare Mumbai API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    try:
+        db = get_database()
+        # Optimize Queries: Create indexes for fast lookups on donations
+        await db.donations.create_index([("status", pymongo.ASCENDING)])
+        await db.donations.create_index([("created_by_id", pymongo.ASCENDING)])
+        await db.donations.create_index([("ngo_id", pymongo.ASCENDING)])
+        await db.donations.create_index([("volunteer_id", pymongo.ASCENDING)])
+        await db.donations.create_index([("created_at", pymongo.DESCENDING)])
+        
+        # Optimize Queries: Create indexes for users collection
+        await db.users.create_index([("email", pymongo.ASCENDING)], unique=True)
+        await db.users.create_index([("role", pymongo.ASCENDING)])
+        await db.users.create_index([("points", pymongo.DESCENDING)])
+    except Exception as e:
+        print(f"Warning: Database index initialization skipped or failed: {e}")
+    yield
+
+app = FastAPI(title="FoodShare Mumbai API", lifespan=lifespan)
+
+import os
 
 # Configure CORS
 origins = [
@@ -23,6 +47,15 @@ origins = [
     # Allow local file protocol during dev
     "*"
 ]
+
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url and frontend_url not in origins:
+    origins.append(frontend_url)
+    origins.append(frontend_url.rstrip("/"))
+
+from fastapi.middleware.gzip import GZipMiddleware
+
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 app.add_middleware(
     CORSMiddleware,
@@ -40,21 +73,3 @@ app.include_router(stats.router, prefix="/api/stats", tags=["Stats"])
 def read_root():
     return {"message": "Welcome to FoodShare Mumbai API"}
 
-from backend.database import get_database
-import pymongo
-
-@app.on_event("startup")
-async def startup_db_client():
-    db = get_database()
-    
-    # Optimize Queries: Create indexes for fast lookups on donations
-    await db.donations.create_index([("status", pymongo.ASCENDING)])
-    await db.donations.create_index([("created_by_id", pymongo.ASCENDING)])
-    await db.donations.create_index([("ngo_id", pymongo.ASCENDING)])
-    await db.donations.create_index([("volunteer_id", pymongo.ASCENDING)])
-    await db.donations.create_index([("created_at", pymongo.DESCENDING)])
-    
-    # Optimize Queries: Create indexes for users collection
-    await db.users.create_index([("email", pymongo.ASCENDING)], unique=True)
-    await db.users.create_index([("role", pymongo.ASCENDING)])
-    await db.users.create_index([("points", pymongo.DESCENDING)])

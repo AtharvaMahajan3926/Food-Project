@@ -21,29 +21,33 @@ function createToastContainer() {
 
 function doLogout() {
   removeToken();
-  window.location.href = 'login.html';
+  const path = window.location.pathname;
+  window.location.href = path.includes('/html/') ? 'login.html' : '/login';
 }
 
 function checkAuthAndRoute() {
   const path = window.location.pathname;
-  const isPublicPage = path.includes('login.html') || path.includes('index.html') || path === '/' || path.endsWith('/html/');
+  const rawPage = path.split('/').pop().replace('.html', '').toLowerCase();
+  const pageName = rawPage || 'index';
+  const isPublicPage = pageName === 'index' || pageName === 'login' || path === '/' || path.endsWith('/html/');
 
   if (!getToken()) {
     if (!isPublicPage) {
-        window.location.href = 'login.html';
+      const loginUrl = path.includes('/html/') ? 'login.html' : '/login';
+      window.location.href = loginUrl;
     }
   } else {
-    // If we have token, get user data and redirect to dashboard if on login/landing
+    // If we have token, get user data and redirect to dashboard if on login/landing or wrong page
     apiFetch('/api/auth/me')
       .then(user => {
+        const targetPage = user.role;
+        const targetUrl = path.includes('/html/') ? `${targetPage}.html` : `/${targetPage}`;
+
         if (isPublicPage) {
-          window.location.href = `${user.role}.html`;
+          window.location.href = targetUrl;
+        } else if (pageName !== targetPage) {
+          window.location.href = targetUrl;
         } else {
-          // Verify we are on the right dashboard
-          const currentRolePage = window.location.pathname.split('/').pop().split('.')[0];
-          if (currentRolePage !== user.role && currentRolePage !== '') {
-            window.location.href = `${user.role}.html`;
-          }
           // Initialize dashboard UI
           if (typeof initDashboard === 'function') {
             initDashboard(user);
@@ -52,8 +56,9 @@ function checkAuthAndRoute() {
       })
       .catch(() => {
         removeToken();
-        if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html') && window.location.pathname !== '/') {
-            window.location.href = 'login.html';
+        if (!isPublicPage) {
+          const loginUrl = path.includes('/html/') ? 'login.html' : '/login';
+          window.location.href = loginUrl;
         }
       });
   }
@@ -61,6 +66,7 @@ function checkAuthAndRoute() {
 
 async function startLiveCounter() {
   const updateCount = async () => {
+    if (document.hidden) return; // Skip background polling when tab is not focused
     try {
       const impact = await apiFetch('/api/stats/impact');
       const liveCountEl = document.getElementById('live-count');
@@ -75,7 +81,7 @@ async function startLiveCounter() {
   // Initial fetch
   await updateCount();
 
-  // Poll every 10 seconds
+  // Poll every 10 seconds only when tab is visible
   setInterval(updateCount, 10000);
 }
 

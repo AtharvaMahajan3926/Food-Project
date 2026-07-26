@@ -1,111 +1,71 @@
-# 🍽️ FoodLink: Smart Food Donation & Reward Ecosystem
+# 🍱 FoodShare Mumbai - Zero Hunger. Zero Waste.
 
-[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge\&logo=react\&logoColor=61DAFB)](https://react.dev/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge\&logo=fastapi\&logoColor=white)](https://fastapi.tiangolo.com/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge\&logo=mongodb\&logoColor=white)](https://www.mongodb.com/)
-[![Uvicorn](https://img.shields.io/badge/Uvicorn-ASGI-ff69b4?style=for-the-badge)]()
+FoodShare Mumbai is a high-performance, real-time social impact platform connecting surplus food donors (restaurants), receiving non-profits (NGOs), and delivery logistics (volunteers) to eliminate urban food waste.
 
 ---
 
-## ✨ What is FoodLink?
+## 🚀 Key Features & Performance Architecture
 
-**FoodLink** is a next-generation social impact platform designed to **reduce food waste and fight hunger** by connecting surplus food donors with NGOs in real time.
-
-It combines **technology, logistics, and rewards** into a scalable ecosystem.
-
----
-
-## ✨ System Highlights
-
-### 🍱 For Donors (The Contributors)
-
-* **Instant Food Listing:** Upload surplus food with details
-* **Reward Engine:** Earn points, badges, leaderboard rank
-* **Impact Tracking:** View contribution impact
+- **High-Performance Express Frontend Runtime**: Lightweight Node.js Express server with GZip compression and HTTP browser caching.
+- **FastAPI Async Backend**: Powered by Python FastAPI, MongoDB index optimizations, and dynamic GZip response compression.
+- **Dynamic Environment Binding**: Multi-environment API endpoint support via `/env.js` and `.env`.
+- **Role-Based Dashboards**: Tailored UI views for Restaurants, NGOs, Volunteers, Students, and Platform Administrators.
+- **Dockerized Multi-Container Support**: Instant deployment via `docker-compose`.
 
 ---
 
-### 🤝 For NGOs (The Receivers)
+## 🛠️ Stack & Infrastructure
 
-* **Smart Matching:** Get nearby food donations automatically
-* **Quick Accept:** Accept requests in real-time
-* **Efficient Distribution:** Smooth delivery coordination
-
----
-
-### 👑 For Admins (The Control Hub)
-
-* **Analytics Dashboard:** Monitor system activity
-* **Leaderboard Insights:** Track top contributors
-* **System Monitoring:** Backend performance tracking
+- **Frontend**: Vanilla JavaScript (ES6+), Modern CSS3 (Glassmorphism & Glow Effects), Node.js Express server.
+- **Backend**: FastAPI, PyMongo / Motor, Pydantic v2, Passlib (BCrypt), Python-JOSE (JWT).
+- **Database**: MongoDB with automatic index initialization.
+- **Containerization**: Docker & Docker Compose.
 
 ---
 
-## 🎨 Premium UX Features
-
-* Clean and responsive UI
-* Real-time updates
-* Role-based dashboards
-* Smooth navigation experience
-
----
-
-## 🛠️ Technical Architecture
-
-### Core Stack
-
-| Layer    | Technologies          |
-| -------- | --------------------- |
-| Frontend | React / HTML, CSS, JS |
-| Backend  | FastAPI (Python)      |
-| Server   | Uvicorn               |
-| Database | MongoDB / Firestore   |
-| Security | JWT Authentication    |
-
----
-
-## 📂 Project Structure
+## 📁 Repository Structure
 
 ```text
-📦 FoodLink
- ┣ 📂 backend
- ┃ ┣ 📂 api
- ┃ ┣ 📂 models
- ┃ ┗ 📜 main.py
- ┣ 📂 frontend
- ┃ ┣ 📂 components
- ┃ ┣ 📂 pages
- ┃ ┗ 📜 app.js
- ┣ 📜 requirements.txt
- ┗ 📜 README.md
+Food_project/
+├── backend/                  # FastAPI Python Service
+│   ├── routes/               # API Router Endpoints (Auth, Donations, Stats)
+│   ├── database.py           # Async MongoDB connection helper
+│   ├── main.py               # FastAPI App entrypoint with CORS & GZip
+│   ├── models.py             # Pydantic schemas & data models
+│   └── Dockerfile            # Container configuration for backend
+├── frontend/                 # Express Frontend Web Server
+│   ├── css/                  # CSS tokens, animations & glassmorphic styles
+│   ├── html/                 # HTML templates (index, login, ngo, admin, etc.)
+│   ├── js/                   # Frontend JS modules (api, auth, common, dashboard)
+│   ├── .env                  # Runtime environment variables
+│   ├── server.js             # Express runtime server with GZip & route handlers
+│   └── Dockerfile            # Container configuration for frontend
+├── docker-compose.yml        # Orchestration for MongoDB, Backend, Frontend
+├── start-frontend.bat        # Quick launcher script for Windows
+├── test_admin.py             # Admin system integration test suite
+├── test_api.py               # API route verification suite
+└── test_login.py             # Authentication verification suite
 ```
 
 ---
 
-## 🏗️ Local Development
+## ⚡ Quick Start
 
-### Prerequisites
-
-* Python 3.10+
-* Node.js
-* MongoDB
-
----
-
-### 🔹 Setup Backend
-
+### 1. Run via Docker Compose (Recommended)
 ```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate
+docker-compose up --build
+```
+Access the application at `http://localhost:3000`.
+
+### 2. Manual Startup
+
+#### Backend Service:
+```bash
 pip install -r requirements.txt
-uvicorn main:app --reload
+uvicorn backend.main:app --reload --port 8000
 ```
 
----
-
-### 🔹 Setup Frontend
-
+#### Frontend Service:
 ```bash
 cd frontend
 npm install
@@ -114,37 +74,11 @@ npm start
 
 ---
 
-## 🚀 Future Roadmap
+## 🧪 Testing
 
-* [ ] AI-based food demand prediction
-* [ ] Real-time delivery tracking
-* [ ] Mobile app
-* [ ] Integration with delivery platforms
-* [ ] Multi-city expansion
-
----
-
-## 🌍 Vision
-
-FoodLink aims to build a **zero food waste ecosystem**, contributing to **UN SDG 2 (Zero Hunger)**.
-
----
-
-## 🤝 Team
-
-* **Atharva Mahajan** – Developer
-
----
-
-## ⭐ Support
-
-If you like this project:
-
-* ⭐ Star the repository
-* 🍴 Fork and contribute
-
----
-
-## ✨ Tagline
-
-> “Connecting surplus food with those who need it most.”
+Run the automated test suites to verify system health:
+```bash
+python test_login.py
+python test_api.py
+python test_admin.py
+```

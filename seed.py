@@ -3,8 +3,13 @@ import datetime
 from passlib.context import CryptContext
 from motor.motor_asyncio import AsyncIOMotorClient
 
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Setup DB connection
-MONGO_URL = "mongodb://localhost:27017"
+MONGO_URL = os.getenv("MONGO_URL") or os.getenv("MONGODB_URI") or "mongodb://localhost:27017"
 client = AsyncIOMotorClient(MONGO_URL)
 db = client.foodshare_db
 
@@ -28,6 +33,7 @@ async def seed_database():
             "role": "admin",
             "hashed_password": hashed_pwd,
             "points": 0,
+            "meals_donated": 0,
             "badges": ["System Admin"],
             "is_verified": True
         },
@@ -37,6 +43,7 @@ async def seed_database():
             "role": "restaurant",
             "hashed_password": hashed_pwd,
             "points": 2840,
+            "meals_donated": 45,
             "badges": ["Bronze", "Silver"],
             "is_verified": True
         },
@@ -46,6 +53,7 @@ async def seed_database():
             "role": "ngo",
             "hashed_password": hashed_pwd,
             "points": 0,
+            "meals_donated": 0,
             "badges": [],
             "license_no": "NGO2024001",
             "ngo_lat": 19.0760,
@@ -58,6 +66,7 @@ async def seed_database():
             "role": "student",
             "hashed_password": hashed_pwd,
             "points": 150,
+            "meals_donated": 0,
             "badges": ["Active"],
             "is_verified": True
         },
@@ -67,6 +76,7 @@ async def seed_database():
             "role": "volunteer",
             "hashed_password": hashed_pwd,
             "points": 50,
+            "meals_donated": 0,
             "badges": ["NSS Helper"],
             "is_nss": True,
             "is_verified": True
@@ -83,6 +93,7 @@ async def seed_database():
     vol_user = await db.users.find_one({"email": "volunteer@test.com"})
 
     # 3. Create Donations
+    now = datetime.datetime.now(datetime.timezone.utc)
     donations = [
         {
             "food_name": "Chicken Biryani",
@@ -99,7 +110,7 @@ async def seed_database():
             "ngo_name": ngo_user["name"],
             "volunteer_id": str(vol_user["_id"]),
             "volunteer_name": vol_user["name"],
-            "created_at": datetime.datetime.utcnow() - datetime.timedelta(hours=5)
+            "created_at": now - datetime.timedelta(hours=5)
         },
         {
             "food_name": "Bread & Pastries",
@@ -115,7 +126,7 @@ async def seed_database():
             "ngo_name": ngo_user["name"],
             "volunteer_id": None,
             "volunteer_name": None,
-            "created_at": datetime.datetime.utcnow() - datetime.timedelta(hours=2)
+            "created_at": now - datetime.timedelta(hours=2)
         },
         {
             "food_name": "Mixed Salads",
@@ -131,7 +142,7 @@ async def seed_database():
             "ngo_name": None,
             "volunteer_id": None,
             "volunteer_name": None,
-            "created_at": datetime.datetime.utcnow()
+            "created_at": now
         }
     ]
     
@@ -141,3 +152,4 @@ async def seed_database():
 
 if __name__ == "__main__":
     asyncio.run(seed_database())
+

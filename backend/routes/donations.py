@@ -12,6 +12,8 @@ router = APIRouter()
 
 # Removed AcceptBody since we'll use user's registered location
 
+from datetime import datetime, timezone
+
 @router.post("/", response_model=DonationInDB)
 async def create_donation(donation: DonationCreate, current_user: UserInDB = Depends(get_current_user)):
     if current_user.role != "restaurant":
@@ -21,20 +23,21 @@ async def create_donation(donation: DonationCreate, current_user: UserInDB = Dep
         raise HTTPException(status_code=403, detail="Your account is pending admin verification. Please wait for approval.")
 
     db = get_database()
-    donation_dict = donation.dict()
+    donation_dict = donation.model_dump()
     donation_dict["status"] = "pending"
     donation_dict["created_by_id"] = str(current_user.id)
     donation_dict["created_by_name"] = current_user.name
-    
-    import datetime
-    donation_dict["created_at"] = datetime.datetime.utcnow()
+    donation_dict["created_at"] = datetime.now(timezone.utc)
 
     new_donation = await db.donations.insert_one(donation_dict)
     created_donation = await db.donations.find_one({"_id": new_donation.inserted_id})
     created_donation["_id"] = str(created_donation["_id"])
     
     # Award points to the restaurant
-    await db.users.update_one({"_id": ObjectId(current_user.id)}, {"$inc": {"points": 10}})
+    try:
+        await db.users.update_one({"_id": ObjectId(current_user.id)}, {"$inc": {"points": 10}})
+    except Exception:
+        pass
 
     return DonationInDB(**created_donation)
 

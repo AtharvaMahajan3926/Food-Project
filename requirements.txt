@@ -1,6 +1,8 @@
 fastapi
 uvicorn
+gunicorn
 motor
+pymongo
 pydantic
 pydantic-settings
 python-dotenv

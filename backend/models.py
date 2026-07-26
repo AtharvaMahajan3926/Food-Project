@@ -1,6 +1,6 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 class UserBase(BaseModel):
     name: str
@@ -17,6 +17,7 @@ class UserCreate(UserBase):
     password: str
 
 class UserInDB(UserBase):
+    model_config = ConfigDict(populate_by_name=True)
     id: str = Field(alias="_id")
     hashed_password: str
     points: int = 0
@@ -24,10 +25,11 @@ class UserInDB(UserBase):
     badges: List[str] = []
 
 class UserResponse(UserBase):
+    model_config = ConfigDict(populate_by_name=True)
     id: str = Field(alias="_id")
-    points: int
-    meals_donated: int
-    badges: List[str]
+    points: int = 0
+    meals_donated: int = 0
+    badges: List[str] = []
 
 class Token(BaseModel):
     access_token: str
@@ -62,6 +64,7 @@ class AdminAnalytics(BaseModel):
     recent_activity: List[dict]
 
 class DonationInDB(DonationCreate):
+    model_config = ConfigDict(populate_by_name=True)
     id: str = Field(alias="_id")
     status: str = "pending" # pending, accepted, en_route, delivered
     created_by_id: str
@@ -73,4 +76,5 @@ class DonationInDB(DonationCreate):
     drop_off_lng: Optional[float] = None
     volunteer_id: Optional[str] = None
     volunteer_name: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+

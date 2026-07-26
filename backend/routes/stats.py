@@ -69,7 +69,7 @@ async def get_leaderboard():
 
     db = get_database()
     # Rank all restaurants by points
-    cursor = db.users.find({"role": "restaurant"}).sort("points", -1).limit(10)
+    cursor = db.users.find({"role": "restaurant"}, {"name": 1, "points": 1, "_id": 1}).sort("points", -1).limit(10)
     users = await cursor.to_list(length=10)
     
     leaderboard = []

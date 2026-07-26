@@ -1,53 +1,37 @@
-import requests
+import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
-BASE_URL = "http://localhost:8000"
+from fastapi.testclient import TestClient
+from backend.main import app
+
+client = TestClient(app)
 
 def test_login():
     """Test login with admin credentials"""
     print("Testing admin login...")
-
-    # Test data from seed.py
     form_data = {
         'username': 'admin@test.com',
-        'password': 'password123',
-        'role': 'admin'
+        'password': 'password123'
     }
 
-    try:
-        response = requests.post(f"{BASE_URL}/api/auth/token", data=form_data)
-        print(f"Response status: {response.status_code}")
+    response = client.post("/api/auth/token", data=form_data)
+    assert response.status_code == 200, f"Login failed: {response.status_code} - {response.text}"
 
-        if response.status_code == 200:
-            data = response.json()
-            token = data.get('access_token')
-            print("✅ Login successful!")
-            print(f"Token: {token[:50]}...")
+    data = response.json()
+    token = data.get('access_token')
+    assert token is not None, "access_token missing in response"
 
-            # Test the /me endpoint
-            headers = {'Authorization': f'Bearer {token}'}
-            me_response = requests.get(f"{BASE_URL}/api/auth/me", headers=headers)
-            if me_response.status_code == 200:
-                user_data = me_response.json()
-                print("✅ /me endpoint works!")
-                print(f"User: {user_data}")
-            else:
-                print(f"❌ /me endpoint failed: {me_response.status_code}")
-                print(me_response.text)
+    headers = {'Authorization': f'Bearer {token}'}
+    me_response = client.get("/api/auth/me", headers=headers)
+    assert me_response.status_code == 200, f"/me endpoint failed: {me_response.status_code} - {me_response.text}"
 
-            return True
-        else:
-            print(f"❌ Login failed: {response.status_code}")
-            print(response.text)
-            return False
-
-    except requests.exceptions.ConnectionError:
-        print("❌ Cannot connect to backend server. Is it running?")
-        return False
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        return False
+    user_data = me_response.json()
+    assert user_data.get("email") == "admin@test.com"
+    print("✅ Login & /me endpoint verified!")
 
 if __name__ == "__main__":
     print("🧪 Testing FoodShare Login API")
     print("=" * 40)
     test_login()
+    print("🎉 All tests passed successfully!")

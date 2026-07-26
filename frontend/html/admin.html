@@ -27,13 +27,8 @@
       <div class="sidebar-nav">
         <div class="nav-group">
           <div class="nav-title">Management</div>
-          <a href="admin.html" class="nav-item"><i>📊</i> Dashboard</a>
-          <a href="#" class="nav-item"><i>✅</i> Verifications</a>
-        </div>
-        <div class="nav-group">
-          <div class="nav-title">System</div>
-          <a href="#" class="nav-item"><i>👥</i> All Users</a>
-          <a href="#" class="nav-item"><i>📋</i> Reports</a>
+          <a href="#" onclick="switchTab('view-overview', this)" class="nav-item active"><i>📊</i> Dashboard</a>
+          <a href="#" onclick="switchTab('view-verifications', this)" class="nav-item"><i>✅</i> Verifications</a>
         </div>
       </div>
 
@@ -54,20 +49,35 @@
         </div>
       </header>
 
-      <section class="content-area">
+      <section id="view-overview" class="content-area dashboard-view">
         <div class="stats-grid" id="stats-container">
           <!-- Stats loaded dynamically -->
         </div>
 
-        <div class="glass-card" style="text-align: center; padding: 60px 20px;">
-          <div style="font-size: 3rem; margin-bottom: 16px;">⚙️</div>
-          <h3>Admin Functions</h3>
-          <p style="color: var(--text2); margin-top: 8px;">Full admin controls available in dedicated sections.</p>
+        <div class="glass-card" style="margin-top: 24px;">
+          <h3>Pending User Approvals</h3>
+          <p style="color: var(--text2); margin-bottom: 16px;">Users waiting for admin verification to access platform capabilities.</p>
+          <div class="list-container" id="pending-verifications-list">
+            <p style="color: var(--text3);">Loading pending verifications...</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-verifications" class="content-area dashboard-view hidden">
+        <div class="section-header">
+          <h2>All Pending Verifications</h2>
+        </div>
+        <div class="glass-card">
+          <div class="list-container" id="all-pending-verifications-list">
+            <p style="color: var(--text3);">Loading pending verifications...</p>
+          </div>
         </div>
       </section>
     </main>
   </div>
 
+  <script src="/env.js"></script>
+  <script src="../js/config.js"></script>
   <script src="../js/api.js"></script>
   <script src="../js/common.js"></script>
   <script src="../js/dashboard.js"></script>
@@ -80,10 +90,64 @@
           ${renderStatCard('Pending Verifications', stats.pending_verifications, '✅')}
           ${renderStatCard('Total Users', stats.total_users, '👥')}
         `;
+
+        await loadPendingVerifications();
       } catch (e) {
-        showToast('❌', 'Failed to load dashboard data', 'var(--red)');
+        showToast('❌', 'Failed to load admin dashboard data', 'var(--red)');
+      }
+    }
+
+    async function loadPendingVerifications() {
+      try {
+        const pending = await apiFetch('/api/auth/admin/pending-verifications');
+        const renderList = (items) => {
+          if (!items || items.length === 0) {
+            return '<p style="color: var(--text3); padding: 12px;">No pending user verifications.</p>';
+          }
+          return items.map(u => `
+            <div class="list-item" style="padding: 16px;">
+              <div style="flex: 1;">
+                <h4>${u.name} <span class="badge pending">${u.role}</span></h4>
+                <p style="margin: 4px 0 0; color: var(--text2); font-size: 0.85rem;">📧 ${u.email} ${u.license_no ? '| 📜 License: ' + u.license_no : ''}</p>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary btn-sm" onclick="approveUser('${u._id}')">Approve</button>
+                <button class="btn btn-secondary btn-sm" onclick="rejectUser('${u._id}')">Reject</button>
+              </div>
+            </div>
+          `).join('');
+        };
+
+        const overviewEl = document.getElementById('pending-verifications-list');
+        if (overviewEl) overviewEl.innerHTML = renderList(pending);
+
+        const allEl = document.getElementById('all-pending-verifications-list');
+        if (allEl) allEl.innerHTML = renderList(pending);
+      } catch (e) {
+        showToast('❌', 'Failed to load pending verifications', 'var(--red)');
+      }
+    }
+
+    async function approveUser(userId) {
+      try {
+        await apiFetch(`/api/auth/admin/verify-user/${userId}`, { method: 'POST' });
+        showToast('✅', 'User approved successfully!', 'var(--accent)');
+        loadDashboardData();
+      } catch (e) {
+        showToast('❌', e.message, 'var(--red)');
+      }
+    }
+
+    async function rejectUser(userId) {
+      try {
+        await apiFetch(`/api/auth/admin/reject-user/${userId}`, { method: 'DELETE' });
+        showToast('✅', 'User rejected & removed.', 'var(--amber)');
+        loadDashboardData();
+      } catch (e) {
+        showToast('❌', e.message, 'var(--red)');
       }
     }
   </script>
 </body>
 </html>
+

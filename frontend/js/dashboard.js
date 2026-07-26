@@ -55,7 +55,7 @@ function renderDonationItem(donation, showActions = false, role = '') {
     if (role === 'ngo' && isPending) {
       actionHtml = `<button class="btn btn-primary btn-sm" onclick="handleAction('accept', '${donation._id}')">Accept</button>`;
     } else if (role === 'volunteer' && isAccepted && !donation.volunteer_id) {
-      actionHtml = `<button class="btn btn-secondary btn-sm" onclick="handleAction('claim', '${donation._id}', ${donation.lat}, ${donation.lng})">Claim Delivery</button>`;
+      actionHtml = `<button class="btn btn-secondary btn-sm" onclick="handleAction('claim', '${donation._id}', ${donation.lat || 'null'}, ${donation.lng || 'null'})">Claim Delivery</button>`;
     } else if (role === 'volunteer' && isEnRoute) {
       actionHtml = `<button class="btn btn-primary btn-sm" onclick="handleAction('deliver', '${donation._id}')">Mark Completed</button>`;
     } else if (role === 'restaurant' && (isPending || isAccepted || isEnRoute)) {

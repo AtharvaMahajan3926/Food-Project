@@ -8,7 +8,7 @@ function selectRole(role, el) {
 }
 
 function updateDynamicAuthFields() {
-  const lic = document.getElementById('reg-license');
+  const lic = document.getElementById('reg-license-group');
   const ngoLocGroup = document.getElementById('reg-ngo-loc-group');
   const ngoGpsBtn = document.getElementById('reg-ngo-gps-btn');
   const nss = document.getElementById('reg-nss-group');
@@ -52,7 +52,10 @@ async function doLogin() {
     });
     
     setToken(data.access_token);
-    window.location.reload(); // common.js will handle redirect
+    showToast('✅', 'Login successful! Redirecting...', 'var(--accent)');
+    setTimeout(() => {
+      checkAuthAndRoute();
+    }, 500);
   } catch (error) {
     showToast('❌', error.message, 'var(--red)');
   }
@@ -79,9 +82,15 @@ async function doRegister() {
     
     document.getElementById('auth-email').value = email;
     document.getElementById('auth-pass').value = password;
-    showToast('✅', 'Account created! Logging in...', 'var(--accent)');
-    toggleRegisterMode();
-    await doLogin();
+    
+    if (currentRole === 'admin') {
+      showToast('✅', 'Admin account created! Logging in...', 'var(--accent)');
+      toggleRegisterMode();
+      await doLogin();
+    } else {
+      showToast('⏳', 'Account created! Pending Admin approval before login.', 'var(--amber)');
+      toggleRegisterMode();
+    }
   } catch (error) {
     showToast('❌', error.message, 'var(--red)');
   }

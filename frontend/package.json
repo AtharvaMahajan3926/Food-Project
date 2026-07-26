@@ -1,14 +1,28 @@
 {
   "name": "foodshare-frontend",
   "version": "1.0.0",
-  "description": "FoodShare Mumbai Frontend",
-  "main": "js/app.js",
+  "description": "FoodShare Mumbai Frontend Runtime Environment",
+  "main": "server.js",
   "scripts": {
-    "dev": "npx http-server . -p 3000 -c-1"
+    "start": "node server.js",
+    "dev": "node server.js",
+    "static": "npx http-server . -p 3000 -c-1"
   },
-  "keywords": [],
+  "keywords": [
+    "foodshare",
+    "mumbai",
+    "frontend",
+    "express",
+    "runtime"
+  ],
   "author": "",
   "license": "ISC",
+  "dependencies": {
+    "compression": "^1.8.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
   "devDependencies": {
     "http-server": "^14.1.1"
   }

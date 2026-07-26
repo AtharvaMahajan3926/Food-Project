@@ -1,18 +1,19 @@
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from bson import ObjectId
+from bson.errors import InvalidId
 
 from backend.database import get_database
 from backend.models import UserCreate, UserResponse, UserInDB, Token, TokenData
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="api/auth/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token")
 
 SECRET_KEY = os.getenv("SECRET_KEY", "super_secret_key_for_foodshare_mumbai")
 ALGORITHM = "HS256"
@@ -29,9 +30,9 @@ def get_password_hash(password):
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -69,7 +70,7 @@ async def register(user: UserCreate):
         raise HTTPException(status_code=400, detail="Email already registered")
     
     hashed_password = get_password_hash(user.password)
-    user_dict = user.dict()
+    user_dict = user.model_dump()
     user_dict.pop("password")
     user_dict["email"] = normalized_email
     user_dict["hashed_password"] = hashed_password
@@ -91,13 +92,27 @@ async def register(user: UserCreate):
     created_user["_id"] = str(created_user["_id"])
     return UserResponse(**created_user)
 
-from fastapi import Form
-
 @router.post("/token", response_model=Token)
 async def login_for_access_token(
-    username: str = Form(...),
-    password: str = Form(...)
+    request: Request,
+    username: Optional[str] = Form(None),
+    password: Optional[str] = Form(None)
 ):
+    if not username or not password:
+        try:
+            body = await request.json()
+            username = username or body.get("username")
+            password = password or body.get("password")
+        except Exception:
+            pass
+
+    if not username or not password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username and password are required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
     db = get_database()
     normalized_email = username.strip().lower()
     user = await db.users.find_one({"email": normalized_email})
@@ -114,6 +129,13 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    if not user.get("is_verified", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Your account is pending admin verification. Please wait for approval before logging in.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user["email"], "role": user.get("role")}, expires_delta=access_token_expires
@@ -122,7 +144,7 @@ async def login_for_access_token(
 
 @router.get("/me", response_model=UserResponse)
 async def read_users_me(current_user: UserInDB = Depends(get_current_user)):
-    return UserResponse(**current_user.dict(by_alias=True))
+    return UserResponse(**current_user.model_dump(by_alias=True))
 
 # Admin-only endpoints
 async def get_current_admin(current_user: UserInDB = Depends(get_current_user)):
@@ -187,23 +209,34 @@ async def get_pending_verifications(admin: UserInDB = Depends(get_current_admin)
 
 @router.post("/admin/verify-user/{user_id}")
 async def verify_user(user_id: str, admin: UserInDB = Depends(get_current_admin)):
+    try:
+        obj_id = ObjectId(user_id)
+    except (InvalidId, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid user ID format")
+
     db = get_database()
     result = await db.users.update_one(
-        {"_id": ObjectId(user_id)},
+        {"_id": obj_id},
         {"$set": {"is_verified": True}}
     )
     
     if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=404, detail="User not found or already verified")
     
     return {"message": "User verified successfully"}
 
 @router.delete("/admin/reject-user/{user_id}")
 async def reject_user(user_id: str, admin: UserInDB = Depends(get_current_admin)):
+    try:
+        obj_id = ObjectId(user_id)
+    except (InvalidId, TypeError):
+        raise HTTPException(status_code=400, detail="Invalid user ID format")
+
     db = get_database()
-    result = await db.users.delete_one({"_id": ObjectId(user_id)})
+    result = await db.users.delete_one({"_id": obj_id})
     
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "User rejected and removed"}
+

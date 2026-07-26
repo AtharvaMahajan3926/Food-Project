@@ -1,4 +1,6 @@
-const API_URL = 'http://localhost:8000';
+const API_URL = (typeof window !== 'undefined' && window.APP_CONFIG && window.APP_CONFIG.API_URL) 
+  ? window.APP_CONFIG.API_URL 
+  : 'http://localhost:8000';
 
 function getToken() {
   return localStorage.getItem('foodshare_token');
@@ -36,16 +38,19 @@ async function apiFetch(endpoint, options = {}) {
   });
 
   if (!response.ok) {
-    if (response.status === 401 || response.status === 403) {
-      removeToken();
-      window.location.href = 'login.html';
-    }
     let errorData;
     try {
       errorData = await response.json();
     } catch {
-      throw new Error(`API Error: ${response.status}`);
+      errorData = { detail: `API Error: ${response.status}` };
     }
+
+    if (response.status === 401 && !endpoint.includes('/api/auth/token') && !endpoint.includes('/api/auth/register')) {
+      removeToken();
+      const path = window.location.pathname;
+      window.location.href = path.includes('/html/') ? 'login.html' : '/login';
+    }
+
     throw new Error(errorData.detail || 'API request failed');
   }
 

@@ -1,47 +1,36 @@
-import requests
-import json
+import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
 
-BASE_URL = "http://localhost:8000"
+from fastapi.testclient import TestClient
+from backend.main import app
 
-def test_admin_login():
-    """Test admin login"""
+client = TestClient(app)
+
+def test_admin_flow():
+    """Test admin login and pending verifications endpoint"""
     print("Testing admin login...")
-    response = requests.post(f"{BASE_URL}/api/auth/token", json={
+    response = client.post("/api/auth/token", json={
         "username": "admin@test.com",
         "password": "password123"
     })
-    if response.status_code == 200:
-        data = response.json()
-        token = data["access_token"]
-        print("✅ Admin login successful")
-        return token
-    else:
-        print(f"❌ Admin login failed: {response.status_code} - {response.text}")
-        return None
+    assert response.status_code == 200, f"Admin login failed: {response.status_code} - {response.text}"
+    
+    data = response.json()
+    token = data.get("access_token")
+    assert token is not None, "Missing access_token"
+    print("✅ Admin login successful")
 
-def test_admin_verifications(token):
-    """Test admin verifications endpoint"""
     print("Testing admin verifications...")
     headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{BASE_URL}/api/auth/admin/pending-verifications", headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        print("✅ Admin verifications retrieved successfully")
-        print(f"   Pending verifications: {len(data)}")
-        if data:
-            print(f"   First user email: {data[0].get('email', 'NO EMAIL')}")
-        return True
-    else:
-        print(f"❌ Admin verifications failed: {response.status_code} - {response.text}")
-        return False
+    verif_res = client.get("/api/auth/admin/pending-verifications", headers=headers)
+    assert verif_res.status_code == 200, f"Admin verifications failed: {verif_res.status_code} - {verif_res.text}"
+    verif_data = verif_res.json()
+    assert isinstance(verif_data, list)
+    print("✅ Admin verifications retrieved successfully")
 
 if __name__ == "__main__":
     print("🧪 Testing FoodShare Admin API URLs")
     print("=" * 40)
-
-    # Test admin functionality
-    admin_token = test_admin_login()
-    if admin_token:
-        test_admin_verifications(admin_token)
-
-    print("\n🎉 Testing complete!")
+    test_admin_flow()
+    print("\n🎉 Testing complete!")
