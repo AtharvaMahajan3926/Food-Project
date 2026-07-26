@@ -115,7 +115,14 @@ async def login_for_access_token(
 
     db = get_database()
     normalized_email = username.strip().lower()
-    user = await db.users.find_one({"email": normalized_email})
+    try:
+        user = await db.users.find_one({"email": normalized_email})
+    except Exception as err:
+        print(f"Database login error: {err}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database connection failed: {str(err)}",
+        )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
